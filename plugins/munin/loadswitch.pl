@@ -25,7 +25,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	# flush after every write
 	$| = 1;
 
-	my ($socket,$client_socket);
+	my ($socket);
 
 	# creating object interface of IO::Socket::INET modules which internally creates 
 	# socket, binds and connects to the TCP server running on the specific port.
