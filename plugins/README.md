@@ -1,0 +1,1 @@
+Plugins for Munin and Nagios, which connect to the main I2C program
