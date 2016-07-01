@@ -8,11 +8,11 @@ use Getopt::Std;
 use IO::Socket::INET;
 
 my $server_host = "localhost";
-my $server_port = "22";
+my $server_port = "223";
 
 my(%ERRORS) = ( OK=>0, WARNING=>1, CRITICAL=>2, UNKNOWN=>3 );
 
-my $status=$ERRORS{OK};
+my $status = $ERRORS{OK};
 my $message;
 
 my $debug_flag=0;
@@ -55,22 +55,32 @@ if (!defined $opt_c||!defined $opt_w||!defined $opt_W||!defined $opt_C||!defined
         print "Higher critical threshold must be higher or equal to higher warning threshold\n";
         $status= $ERRORS{UNKNOWN};
         &printhelp;
+} elsif (not($opt_d eq "U"||$opt_d eq "I")) {
+        print "Dimension must be either U or I for voltage or Current\n";
+        $status= $ERRORS{UNKNOWN};
+        &printhelp;
+} elsif (not($opt_s eq "BAT"||$opt_d eq "SUPPLY")) {
+        print "Source must be either BAT or SUPPLY for battery or stationary power supply\n";
+        $status= $ERRORS{UNKNOWN};
+        &printhelp;
 }
+
+
 
 # Open ServerPort
 # flush after every write
 $| = 1;
 
-my ($socket,$client_socket);
+my $socket;
 
 # creating object interface of IO::Socket::INET modules which internally creates 
 # socket, binds and connects to the TCP server running on the specific port.
-unless($socket = new IO::Socket::INET (
+unless ($socket = new IO::Socket::INET (
 	PeerHost => $server_host,
 	PeerPort => $server_port,
 	Proto => 'tcp',
 	)) {
-		$status = $ERRORS{CRIT};
+		$status = $ERRORS{CRITICAL};
 		$message = "UNKNOWN\|Data Server not running at $server_host:$server_port\n";
 		print "$message\n";
 		exit $status;
@@ -82,9 +92,15 @@ if ($debug_flag) {
 
 
 # read the socket data sent by server.
-my $value = <$socket>;
+my $data = <$socket>;
 
-print "Received from Server : $value\n";
+print "Received from Server : $data\n";
+
+# Todo: Parse data received from server
+# Ausserdem Format-Line verwerfen
+
+# Extract data separated by ";"
+my ($ubat,$ibat,$unt,$int) = split /;/, $data;
 
 
 
@@ -95,6 +111,9 @@ print "Received from Server : $value\n";
 #        $status=$ERRORS{CRITICAL};
 #}
 #$value = sprintf("%.2f", $value);
+
+# TODO: Je nach gewaehlter Option die Grenzwertbetrachung machen.
+
 
 if ($debug_flag) {
 	print "opt_c:$opt_c opt_w:$opt_w opt_W:$opt_W opt_C:$opt_C opt_h:$opt_h opt_d:$opt_d opt_s:$opt_s\n";
