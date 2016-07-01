@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w
 
-my $server_ip = "127.0.0.1";
+use IO::Socket::INET;
+
+my $server_host = "localhost";
 my $server_port = "1234";
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
@@ -17,15 +19,32 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "IBat.type GAUGE\n";
 	print "INT.label Current Power Supply\n";
 	print "INT.type GAUGE\n";
-else {
+} else {
 
-// Open ServerPort
+	# Open ServerPort
+	# flush after every write
+	$| = 1;
 
-// Read Values
+	my ($socket,$client_socket);
 
-// Give out on STDOUT in format
-//  UBat.value 12.234
-//  IBat.value 1.234
-//  UNT.value 12.234
-//  INT.value 1.234
+	# creating object interface of IO::Socket::INET modules which internally creates 
+	# socket, binds and connects to the TCP server running on the specific port.
+	$socket = new IO::Socket::INET (
+	PeerHost => $server_host,
+	PeerPort => $server_port,
+	Proto => 'tcp',
+	) or die "ERROR in Socket Creation : $!\n";
+
+	print "TCP Connection Success.\n";
+
+	# read the socket data sent by server.
+	$data = <$socket>;
+
+	print "Received from Server : $data\n";
+
+	# Give out on STDOUT in format
+	#  UBat.value 12.234
+	#  IBat.value 1.234
+	#  UNT.value 12.234
+	#  INT.value 1.234
 }
