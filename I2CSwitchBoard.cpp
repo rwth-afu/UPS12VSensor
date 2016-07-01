@@ -1,6 +1,6 @@
-#include "raspagerdigiextension.h"
+#include "I2CSwitchBoard.h"
 
-RaspagerDigiExtension::RaspagerDigiExtension(bool skipSetup) {
+I2CSwitchBoard::I2CSwitchBoard(bool skipSetup) {
     if (skipSetup) {
         cout << "WARNING: Skipping I2C Communication Setup!" << endl;
         return;
@@ -25,7 +25,7 @@ RaspagerDigiExtension::RaspagerDigiExtension(bool skipSetup) {
 }
 
 
-int RaspagerDigiExtension::readADCValue() {
+int I2CSwitchBoard::readADCValue() {
     int myadcvalue = wiringPiI2CReadReg16(fdadc, 0x00);
     // swap lower and higher bit
     int myadcLowerByte = (myadcvalue & 0xFF00) >> 8;
@@ -34,47 +34,47 @@ int RaspagerDigiExtension::readADCValue() {
     return (myadcHigherByte | myadcLowerByte);
 }
 
-void RaspagerDigiExtension::setMeasurementMultiplexer(char channel) {
+void I2CSwitchBoard::setMeasurementMultiplexer(char channel) {
 	wiringPiI2CWriteReg8(fdExt4bit, PCA9536OUTPUTREG, (channel));
 	// Wait some time to let the voltages get stable
 	delay(50);
 }
 
-int RaspagerDigiExtension::readIBatRaw() {
+int I2CSwitchBoard::readIBatRaw() {
     setMeasurementMultiplexer(PCA9536IBAT);
     return readADCValue();
 }
 
-int RaspagerDigiExtension::readUBatRaw() {
+int I2CSwitchBoard::readUBatRaw() {
 	setMeasurementMultiplexer(PCA9536UBAT);
 	return readADCValue();
 }
 
-int RaspagerDigiExtension::readINetzteilRaw() {
+int I2CSwitchBoard::readINetzteilRaw() {
 	setMeasurementMultiplexer(PCA9536INETZTEIL);
 	return readADCValue();
 }
 
-int RaspagerDigiExtension::readUNetzteilRaw() {
+int I2CSwitchBoard::readUNetzteilRaw() {
 	setMeasurementMultiplexer(PCA9536UNETZTEIL);	
 	return readADCValue();
 }
 
 
-double RaspagerDigiExtension::readIBat() {
+double I2CSwitchBoard::readIBat() {
     double res;
     res = (((double)readIBatRaw() / 4096 * 5) - 0.495) * 0.4;
 	if (res < 0) { res = 0;}
 	return res;
 }
 
-double RaspagerDigiExtension::readUBat() {
+double I2CSwitchBoard::readUBat() {
     double res;
     res = ((double)readUBatRaw() / 4096 * 5) / 10000 * (10000 + 33000);
     return res;
 }
 
-double RaspagerDigiExtension::readINetzteil() {
+double I2CSwitchBoard::readINetzteil() {
     double res;
     res = (((double)readINetzteilRaw() / 4096 * 5) - 0.495) * 0.4;
 	if (res < 0) { res = 0;}
@@ -82,7 +82,7 @@ double RaspagerDigiExtension::readINetzteil() {
 	
 }
 
-double RaspagerDigiExtension::readUNetzteil(){
+double I2CSwitchBoard::readUNetzteil(){
     double res;
     res = ((double)readUNetzteilRaw() / 4096 * 5) / 10000 * (10000 + 33000);
     return res;
@@ -90,18 +90,18 @@ double RaspagerDigiExtension::readUNetzteil(){
 }
 
 
-string RaspagerDigiExtension::doubleValueToString(double val) {
+string I2CSwitchBoard::doubleValueToString(double val) {
     std::ostringstream ss;
     ss << val;
     return ss.str();
 }
 
-string RaspagerDigiExtension::shortUnsignedIntToString(short unsigned int val) {
+string I2CSwitchBoard::shortUnsignedIntToString(short unsigned int val) {
     std::ostringstream ss;
     ss << val;
     return ss.str();
 }
 
-string RaspagerDigiExtension::boolToString(bool val) {
+string I2CSwitchBoard::boolToString(bool val) {
     return val ? "Yes" : "No";
 }

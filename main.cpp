@@ -12,7 +12,7 @@
 #include <string>
 
 
-#include "raspagerdigiextension.h"
+#include "I2CSwitchBoard.h"
 
 #define PROG_VERSION	"0.0.1"
 #define COPYRIGHTZEILE1	"RasPagerDigi by DH3WR"
@@ -21,7 +21,7 @@
 #define TASTERDELAY_MS	50
 
 int main(int argc, char** argv) {
-    RaspagerDigiExtension myExtension(false);
+    I2CSwitchBoard myI2CSwitchBoard(false);
 
 
 	double readIBat();
@@ -32,10 +32,10 @@ int main(int argc, char** argv) {
 	while (1) {
 		
 		// Read ADC Values
-		double ibat = myExtension.readIBat();
-		double ubat = myExtension.readUBat();
-		double inetzteil = myExtension.readINetzteil();
-		double unetzteil = myExtension.readUNetzteil();
+		double ibat = myI2CSwitchBoard.readIBat();
+		double ubat = myI2CSwitchBoard.readUBat();
+		double inetzteil = myI2CSwitchBoard.readINetzteil();
+		double unetzteil = myI2CSwitchBoard.readUNetzteil();
 		cout << ubat << " V Bat  " << ibat << " A Bat  " << unetzteil << " V NT   " << inetzteil << " A NT  " << "\n";
 		
 		usleep(1000*200);

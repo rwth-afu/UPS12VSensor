@@ -24,7 +24,7 @@
 
 using namespace std;
 
-class RaspagerDigiExtension {
+class I2CSwitchBoard {
 private:
     int fdadc;
     int fdExt4bit;
@@ -37,7 +37,7 @@ private:
 	void setMeasurementMultiplexer(char channel);
 	
 public:
-    RaspagerDigiExtension(bool skipSetup);
+    I2CSwitchBoard(bool skipSetup);
     double readIBat();
 	double readUBat();
 	double readINetzteil();
