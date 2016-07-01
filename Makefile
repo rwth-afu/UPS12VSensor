@@ -3,7 +3,7 @@ CXXFLAGS = -c -Wall
 LD = g++
 LDFLAGS = -lwiringPi
 
-BIN = build/bat
+BIN = build/I2CSwitchBoard
 SRC = $(wildcard *.cpp)
 OBJ = $(SRC:%.cpp=build/%.o)
 
