@@ -1,11 +1,17 @@
 CXX = g++
-CXXFLAGS = -c -Wall
+CXXFLAGS = -c -Wall -std=c++11 -pthread
 LD = g++
-LDFLAGS = -lwiringPi
+LDFLAGS = -pthread
 
+ifeq ($(DEBUG), 1)
+	CXXFLAGS += -g -O0
+else
+	CXXFLAGS += -O2 -DNDEBUG
+endif
+
+SRC = $(wildcard src/*.cpp)
+OBJ = $(SRC:src/%.cpp=build/%.o)
 BIN = build/I2CSwitchBoard
-SRC = $(wildcard *.cpp)
-OBJ = $(SRC:%.cpp=build/%.o)
 
 .PHONY: all clean
 
@@ -14,11 +20,11 @@ all: $(BIN)
 $(BIN): $(OBJ)
 	$(LD) -o $@ $^ $(LDFLAGS)
 
-build/%.o: %.cpp | build
+build/%.o: src/%.cpp | build
 	$(CXX) $(CXXFLAGS) -o $@ $<
 
 build:
-	mkdir $@
+	mkdir -p $@
 
 clean:
 	rm -rf build/
