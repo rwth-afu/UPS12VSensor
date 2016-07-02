@@ -1,5 +1,7 @@
 # Ignore build directory
 build/
+# Ignore geany project file
+*.geany
 
 # =========================
 # Operating System Files
