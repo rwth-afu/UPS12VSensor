@@ -1,9 +1,3 @@
-#ifdef USE_DUMMY_READER
-#include "DummyReader.h"
-#else
-#include "I2CDataReader.h"
-#endif
-
 #include "ServerProcess.h"
 //#include <csignal>
 #include <exception>
