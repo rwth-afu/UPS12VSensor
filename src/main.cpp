@@ -1,5 +1,9 @@
-//#include "DummySensor.h"
+#ifdef USE_DUMMY_READER
+#include "DummyReader.h"
+#else
 #include "I2CDataReader.h"
+#endif
+
 #include "ServerProcess.h"
 //#include <csignal>
 #include <exception>
@@ -55,9 +59,10 @@ static bool parseArgs(int argc, char* argv[], ServerProcess::Configuration& cfg)
 {
 	// Set defaults
 	cfg.port = 50033;
+	cfg.pollInterval = 1000;
 
 	int ch;
-	while ((ch = getopt(argc, argv, "hvp:")) != -1)
+	while ((ch = getopt(argc, argv, "hvp:i:")) != -1)
 	{
 		switch (ch)
 		{
@@ -70,6 +75,8 @@ static bool parseArgs(int argc, char* argv[], ServerProcess::Configuration& cfg)
 		case 'p':
 			cfg.port = stoi(optarg);
 			break;
+		case 'i':
+			cfg.pollInterval = stoi(optarg);
 		default:
 			return false;
 		}
@@ -85,13 +92,16 @@ int main(int argc, char* argv[])
 		ServerProcess::Configuration cfg;
 		if (!parseArgs(argc, argv, cfg))
 		{
-			return false;
+			return EXIT_FAILURE;
 		}
 
 		//setupSignalHandler();
 
-		//unique_ptr<IDataReader> reader(new DummySensor());
+#ifdef USE_DUMMY_READER
+		unique_ptr<IDataReader> reader(new DummyReader());
+#else
 		unique_ptr<IDataReader> reader(new I2CDataReader());
+#endif
 		ServerProcess proc(cfg, move(reader));
 		proc.run();
 

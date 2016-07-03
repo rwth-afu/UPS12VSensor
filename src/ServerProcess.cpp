@@ -1,6 +1,7 @@
 #include "ServerProcess.h"
 #include "IDataReader.h"
 #include <array>
+#include <chrono>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -85,7 +86,7 @@ void ServerProcess::run()
 
 	while (!mShutdown)
 	{
-		int sd = accept(mSD, &addr, &addrlen);
+		const auto sd = accept(mSD, &addr, &addrlen);
 		if (sd == -1)
 		{
 			cerr << "Failed to accept connection." << endl;
@@ -93,11 +94,11 @@ void ServerProcess::run()
 		}
 
 		mLock.lock();
-		string data = mTextData;
+		const auto data = mTextData;
 		mLock.unlock();
 
 		// TODO Check if all data is written
-		ssize_t written = write(sd, data.c_str(), data.size());
+		const auto written = write(sd, data.c_str(), data.size());
 		if (written == -1)
 		{
 			cerr << "Failed to write data." << endl;
@@ -113,6 +114,8 @@ void ServerProcess::run()
 
 void ServerProcess::updateData()
 {
+	const auto msec = chrono::milliseconds(mConfig.pollInterval);
+
 	try
 	{
 		SensorData data;
@@ -128,6 +131,8 @@ void ServerProcess::updateData()
 			mLock.lock();
 			mTextData = text.str();
 			mLock.unlock();
+
+			this_thread::sleep_for(msec);
 		}
 	}
 	catch (const exception& ex)

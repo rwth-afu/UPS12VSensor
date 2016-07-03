@@ -9,6 +9,10 @@ else
 	CXXFLAGS += -O2 -DNDEBUG
 endif
 
+ifeq ($(DUMMY_READER), 1)
+	CXXFLAGS += -DUSE_DUMMY_READER
+endif
+
 SRC = $(wildcard src/*.cpp)
 OBJ = $(SRC:src/%.cpp=build/%.o)
 BIN = build/I2CSwitchBoard

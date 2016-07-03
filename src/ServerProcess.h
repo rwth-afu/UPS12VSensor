@@ -5,7 +5,6 @@
 #include <mutex>
 
 class IDataReader;
-struct epoll_event;
 
 class ServerProcess
 {
@@ -13,6 +12,7 @@ public:
 	struct Configuration
 	{
 		int port;
+		int pollInterval;
 	};
 
 public:

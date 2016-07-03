@@ -16,12 +16,12 @@ public:
 	virtual void read(SensorData& data) override;
 
 private:
-	int readADC();
-	void setMultiplexer(char channel);
-	double readUBat();
-	double readIBat();
-	double readUPsu();
-	double readIPsu();
+	int readADC() const;
+	void setMultiplexer(char channel) const;
+	double readUBat() const;
+	double readIBat() const;
+	double readUPsu() const;
+	double readIPsu() const;
 
 private:
 	int mADC = -1;

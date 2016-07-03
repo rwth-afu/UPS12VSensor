@@ -91,21 +91,21 @@ void I2CDataReader::read(SensorData& data)
 	data.IPsu = readIPsu();
 }
 
-int I2CDataReader::readADC()
+int I2CDataReader::readADC() const
 {
-	const int value = i2c_smbus_read_word_data(mADC, 0x00);
+	const auto value = i2c_smbus_read_word_data(mADC, 0x00);
 	if (value < 0)
 	{
 		throw runtime_error("Failed to read ADC value.");
 	}
 
-	const int adcLowerByte = (value & 0xFF00) >> 8;
-    const int adcHigherByte = (value & 0x00FF) << 8;
+	const auto adcLowerByte = (value & 0xFF00) >> 8;
+    const auto adcHigherByte = (value & 0x00FF) << 8;
 
     return (adcHigherByte | adcLowerByte);
 }
 
-void I2CDataReader::setMultiplexer(char channel)
+void I2CDataReader::setMultiplexer(char channel) const
 {
 	if (i2c_smbus_write_byte_data(mMux, PCA9536::REG_OUT, channel) < 0)
 	{
@@ -116,18 +116,18 @@ void I2CDataReader::setMultiplexer(char channel)
 	this_thread::sleep_for(chrono::milliseconds(50));
 }
 
-double I2CDataReader::readUBat()
+double I2CDataReader::readUBat() const
 {
 	setMultiplexer(PCA9536::SENS_UBAT);
-	double value = static_cast<double>(readADC());
+	auto value = static_cast<double>(readADC());
 
 	return (value / 4096.0 * 5.0) / 10000.0 * (10000.0 + 33000.0);
 }
 
-double I2CDataReader::readIBat()
+double I2CDataReader::readIBat() const
 {
 	setMultiplexer(PCA9536::SENS_IBAT);
-	double value = static_cast<double>(readADC());
+	auto value = static_cast<double>(readADC());
 
 	value = ((value / 4096.0 * 5.0) - 0.495) * 0.4;
 	if (value < 0.0)
@@ -138,18 +138,18 @@ double I2CDataReader::readIBat()
 	return value;
 }
 
-double I2CDataReader::readUPsu()
+double I2CDataReader::readUPsu() const
 {
 	setMultiplexer(PCA9536::SENS_UPSU);
-	double value = static_cast<double>(readADC());
+	auto value = static_cast<double>(readADC());
 
 	return (value / 4096.0 * 5.0) / 10000.0 * (10000.0 + 33000.0);
 }
 
-double I2CDataReader::readIPsu()
+double I2CDataReader::readIPsu() const
 {
 	setMultiplexer(PCA9536::SENS_IPSU);
-	double value = static_cast<double>(readADC());
+	auto value = static_cast<double>(readADC());
 
 	value = ((value / 4096.0 * 5.0) - 0.495) * 0.4;
 	if (value < 0.0)
