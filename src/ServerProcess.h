@@ -13,10 +13,11 @@ public:
 	{
 		int port;
 		int pollInterval;
+		bool useDummyReader;
 	};
 
 public:
-	ServerProcess(const Configuration& cfg, std::unique_ptr<IDataReader> reader);
+	ServerProcess(const Configuration& cfg);
 
 	ServerProcess(const ServerProcess& o) = delete;
 

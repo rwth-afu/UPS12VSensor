@@ -1,5 +1,6 @@
 #include "ServerProcess.h"
-#include "IDataReader.h"
+#include "DummyReader.h"
+#include "I2CDataReader.h"
 #include <array>
 #include <chrono>
 #include <cstring>
@@ -17,14 +18,17 @@ using namespace std;
 
 static constexpr int LISTEN_BACKLOG = 5;
 
-ServerProcess::ServerProcess(const Configuration& cfg, unique_ptr<IDataReader> reader) :
+ServerProcess::ServerProcess(const Configuration& cfg) :
 	mConfig(cfg),
-	mReader(move(reader)),
 	mShutdown(false)
 {
-	if (!mReader)
+	if (cfg.useDummyReader)
 	{
-		throw runtime_error("Invalid data reader.");
+		mReader = unique_ptr<IDataReader>(new DummyReader());
+	}
+	else
+	{
+		mReader = unique_ptr<IDataReader>(new I2CDataReader());
 	}
 
 	// Create server socket
