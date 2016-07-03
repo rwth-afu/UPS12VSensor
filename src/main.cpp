@@ -37,8 +37,8 @@ static void setupSignalHandler()
 static void printHelp()
 {
 	cout << "Usage: I2CSwitchBoard <Options>" << endl << endl;
-	cout << " -h       Displays this help." << endl;
 	cout << " -d       Use dummy data reader instead of I2C reader." << endl;
+	cout << " -h       Displays this help." << endl;
 	cout << " -i <int> Sets the polling interval in milliseconds." << endl;
 	cout << " -p <int> Sets the TCP port to listen on." << endl;
 	cout << " -v       Displays version information." << endl;
@@ -58,24 +58,25 @@ static bool parseArgs(int argc, char* argv[], ServerProcess::Configuration& cfg)
 	cfg.useDummyReader = false;
 
 	int ch;
-	while ((ch = getopt(argc, argv, "hvdp:i:")) != -1)
+	while ((ch = getopt(argc, argv, "dhi:p:qv")) != -1)
 	{
 		switch (ch)
 		{
+		case 'd':
+			cfg.useDummyReader = true;
+			break;
 		case 'h':
 			printHelp();
 			return false;
-		case 'v':
-			printVersion();
-			return false;
-		case 'd':
-			cfg.useDummyReader = true;
+		case 'i':
+			cfg.pollInterval = stoi(optarg);
 			break;
 		case 'p':
 			cfg.port = stoi(optarg);
 			break;
-		case 'i':
-			cfg.pollInterval = stoi(optarg);
+		case 'v':
+			printVersion();
+			return false;
 		default:
 			return false;
 		}

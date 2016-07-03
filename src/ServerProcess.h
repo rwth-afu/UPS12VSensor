@@ -36,7 +36,7 @@ private:
 	const Configuration mConfig;
 	std::string mTextData;
 	std::unique_ptr<IDataReader> mReader;
-	std::mutex mLock;
+	std::mutex mUpdateLock;
 	std::atomic_bool mShutdown;
 	int mSD;
 };

@@ -97,9 +97,9 @@ void ServerProcess::run()
 			continue;
 		}
 
-		mLock.lock();
+		mUpdateLock.lock();
 		const auto data = mTextData;
-		mLock.unlock();
+		mUpdateLock.unlock();
 
 		// TODO Check if all data is written
 		const auto written = write(sd, data.c_str(), data.size());
@@ -132,9 +132,9 @@ void ServerProcess::updateData()
 				data.UBat << ";" << data.IBat << ";" << data.UPsu <<
 				";" << data.IPsu;
 
-			mLock.lock();
+			mUpdateLock.lock();
 			mTextData = text.str();
-			mLock.unlock();
+			mUpdateLock.unlock();
 
 			this_thread::sleep_for(msec);
 		}
