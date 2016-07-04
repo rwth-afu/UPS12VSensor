@@ -181,7 +181,7 @@ if ($opt_s eq "BAT") {
 		$output = $message . ": $value V\|Voltage_Bat=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
 	}
 	elsif ($opt_d eq "I") {
-		$output = $message . ": $value A\|Ampere_Bat=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
+		$output = $message . ": $value A\|Current_Bat=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
 	} else { #This should never happen
 		$status=$ERRORS{UNKNOWN};
 		$message="UNKNOWN|Error in formating output value\n";
@@ -193,7 +193,7 @@ if ($opt_s eq "BAT") {
 		$output = $message . ": $value V\|Voltage_Supply=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
 	}
 	elsif ($opt_d eq "I") {
-		$output = $message . ": $value A\|Ampere_Supply=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
+		$output = $message . ": $value A\|Current_Supply=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
 	} else { #This should never happen
 		$status=$ERRORS{UNKNOWN};
 		$message="UNKNOWN|Error in formating output value\n";
