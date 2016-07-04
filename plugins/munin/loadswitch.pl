@@ -19,6 +19,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "IBat.type GAUGE\n";
 	print "INT.label Current Power Supply in Amperes\n";
 	print "INT.type GAUGE\n";
+	exit 0;
 } else {
 
 	# Open ServerPort
@@ -51,8 +52,9 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	#  UNT.value 12.234
 	#  INT.value 1.234
 
-	print "UBAT.value $ubat\n";
-	print "IBAT.value $ibat\n";
+	print "UBat.value $ubat\n";
+	print "IBat.value $ibat\n";
 	print "UNT.value $unt\n";
 	print "INT.value $int\n";
+	exit 0;
 }
