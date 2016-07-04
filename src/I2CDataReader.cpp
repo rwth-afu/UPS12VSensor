@@ -129,7 +129,7 @@ double I2CDataReader::readIBat() const
 	setMultiplexer(PCA9536::SENS_IBAT);
 	auto value = static_cast<double>(readADC());
 
-	value = ((value / 4096.0 * 5.0) - 0.495) * 0.4;
+	value = ((value / 4096.0 * 5.0) - 0.495) / 0.4;
 	if (value < 0.0)
 	{
 		value = 0.0;
@@ -151,7 +151,7 @@ double I2CDataReader::readIPsu() const
 	setMultiplexer(PCA9536::SENS_IPSU);
 	auto value = static_cast<double>(readADC());
 
-	value = ((value / 4096.0 * 5.0) - 0.495) * 0.4;
+	value = ((value / 4096.0 * 5.0) - 0.495) / 0.4;
 	if (value < 0.0)
 	{
 		value = 0.0;
