@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # Check values of voltages and currents from 12 V UPS Board
+# Ralf Wilke rwth-afu@online.de
+# Last change: 4.7.2016
+
 
 use strict;
 use warnings;
@@ -8,7 +11,7 @@ use Getopt::Std;
 use IO::Socket::INET;
 
 my $server_host = "localhost";
-my $server_port = "223";
+my $server_port = "1337";
 
 my(%ERRORS) = ( OK=>0, WARNING=>1, CRITICAL=>2, UNKNOWN=>3 );
 
@@ -55,11 +58,11 @@ if (!defined $opt_c||!defined $opt_w||!defined $opt_W||!defined $opt_C||!defined
         print "Higher critical threshold must be higher or equal to higher warning threshold\n";
         $status= $ERRORS{UNKNOWN};
         &printhelp;
-} elsif (not($opt_d eq "U"||$opt_d eq "I")) {
+} elsif (not( ($opt_d eq "U") || ($opt_d eq "I") )) {
         print "Dimension must be either U or I for voltage or Current\n";
         $status= $ERRORS{UNKNOWN};
         &printhelp;
-} elsif (not($opt_s eq "BAT"||$opt_d eq "SUPPLY")) {
+} elsif (not( ($opt_s eq "BAT") || ($opt_s eq "SUPPLY") )) {
         print "Source must be either BAT or SUPPLY for battery or stationary power supply\n";
         $status= $ERRORS{UNKNOWN};
         &printhelp;
@@ -90,33 +93,63 @@ if ($debug_flag) {
 	print "TCP Connection Success.\n";
 }
 
-
 # read the socket data sent by server.
 my $data = <$socket>;
-
-print "Received from Server : $data\n";
-
-# Todo: Parse data received from server
-# Ausserdem Format-Line verwerfen
+if ($debug_flag) {
+	print "Received from Server : $data\n";
+}
 
 # Extract data separated by ";"
 my ($ubat,$ibat,$unt,$int) = split /;/, $data;
 
+my $value = -1;
+
+if ($opt_s eq "BAT") {
+	if ($opt_d eq "U") {
+		$value = $ubat;
+	}
+	elsif ($opt_d eq "I") {
+		$value = $ibat;
+	}
+	else { #This should never happen
+		$status = $ERRORS{CRITICAL};
+		$message = "UNKNOWN\|Internal error in script, dimension neither U or I\n";
+		print "$message\n";
+		exit $status;
+	}
+} elsif ($opt_s eq "SUPPLY") {
+	if ($opt_d eq "U") {
+		$value = $unt;
+	}
+	elsif ($opt_d eq "I") {
+		$value = $int;
+	}
+	else { #This should never happen
+		$status = $ERRORS{CRITICAL};
+		$message = "UNKNOWN\|Internal error in script, dimension neither U or I\n";
+		print "$message\n";
+		exit $status;
+	}
+} else { #This should never happen
+	$status = $ERRORS{CRITICAL};
+	$message = "UNKNOWN\|Internal error in script, Source neither BAT nor SUPPLY\n";
+	print "$message\n";
+	exit $status;
+}
 
 
-#$value =~ s/^\s*(.*?)\s*$/$1/; #remove whitespaces
-#unless (($value =~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) || ($value =~ /^[+-]?\d+$/)) #check that it is an integer or decimal returned
-#{
-#        $message="Did not got an integer or a decimal from temperature probe";
-#        $status=$ERRORS{CRITICAL};
-#}
+$value =~ s/^\s*(.*?)\s*$/$1/; #remove whitespaces
+unless (($value =~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) || ($value =~ /^[+-]?\d+$/)) #check that it is an integer or decimal returned
+{
+        $message="Did not got an integer or a decimal as value";
+        $status=$ERRORS{UNKNOWN};
+}
 #$value = sprintf("%.2f", $value);
-
-# TODO: Je nach gewaehlter Option die Grenzwertbetrachung machen.
 
 
 if ($debug_flag) {
 	print "opt_c:$opt_c opt_w:$opt_w opt_W:$opt_W opt_C:$opt_C opt_h:$opt_h opt_d:$opt_d opt_s:$opt_s\n";
+	print "Value: $value\n";
 }
 
 
@@ -136,11 +169,45 @@ if ($value <= $opt_c) {
 } elsif ($value >= $opt_C) {
         $status=$ERRORS{CRITICAL};
         $message="CRITICAL";
-} else { #This should never happend
+} else { #This should never happen
         $status=$ERRORS{UNKNOWN};
         $message="UNKNOWN";
 }
 
-print "$message: $value C\|temperature=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
+my $output = "";
+
+if ($opt_s eq "BAT") {
+	if ($opt_d eq "U") {
+		$output = $message . ": $value V\|Voltage_Bat=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
+	}
+	elsif ($opt_d eq "I") {
+		$output = $message . ": $value A\|Ampere_Bat=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
+	} else { #This should never happen
+		$status=$ERRORS{UNKNOWN};
+		$message="UNKNOWN|Error in formating output value\n";
+		print "$message\n";
+		exit $status;
+	}
+} elsif ($opt_s eq "SUPPLY") {
+	if ($opt_d eq "U") {
+		$output = $message . ": $value V\|Voltage_Supply=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
+	}
+	elsif ($opt_d eq "I") {
+		$output = $message . ": $value A\|Ampere_Supply=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
+	} else { #This should never happen
+		$status=$ERRORS{UNKNOWN};
+		$message="UNKNOWN|Error in formating output value\n";
+		print "$message\n";
+		exit $status;
+	}
+} else { #This should never happen
+    $status=$ERRORS{UNKNOWN};
+    $message="UNKNOWN|Error in formating output value\n";
+	print "$message\n";
+	exit $status;
+}
+	
+print $output;
+#print "$message: $value C\|temperature=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
 exit $status;
 
