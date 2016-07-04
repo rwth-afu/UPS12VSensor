@@ -1,4 +1,5 @@
 #include "ServerProcess.h"
+#include "Logger.h"
 //#include <csignal>
 #include <exception>
 #include <iostream>
@@ -7,6 +8,8 @@
 #define VERSION 0.1
 
 using namespace std;
+
+std::shared_ptr<Logger> g_logger;
 
 /*
 static void onShutdownSignal(int value)
@@ -78,6 +81,7 @@ static bool parseArgs(int argc, char* argv[], ServerProcess::Configuration& cfg)
 			printVersion();
 			return false;
 		default:
+			g_logger->write(LogLevel::ERROR, "Invalid command line option.");
 			return false;
 		}
 	}
@@ -87,6 +91,9 @@ static bool parseArgs(int argc, char* argv[], ServerProcess::Configuration& cfg)
 
 int main(int argc, char* argv[])
 {
+	// TODO Init logger based on config
+	g_logger = make_shared<Logger>(LogLevel::TRACE);
+
 	try
 	{
 		ServerProcess::Configuration cfg;
@@ -103,7 +110,7 @@ int main(int argc, char* argv[])
 	}
 	catch (const exception& ex)
 	{
-		cerr << "Fatal: " << ex.what() << endl;
+		g_logger->write(LogLevel::ERROR, ex.what());
 		return EXIT_FAILURE;
 	}
 }

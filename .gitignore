@@ -2,6 +2,8 @@
 build/
 # Ignore geany project file
 *.geany
+# Ignore local files
+*.local
 
 # =========================
 # Operating System Files
