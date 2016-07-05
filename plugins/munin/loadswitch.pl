@@ -1,9 +1,15 @@
 #!/usr/bin/perl -w
+# Munin Plugin for 12 V UPS made by RWTH Ham Radio Group
+# Project Repository https://github.com/dh3wr/UPS12VSensor
+
+# Author: Ralf Wilke DH3WR
+# Last change: 5.7.2016
+
 
 use IO::Socket::INET;
 
 my $server_host = "localhost";
-my $server_port = "1337";
+my $server_port = "50033";
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "graph_title Voltage and Current on 12 V UPS\n";
