@@ -1,6 +1,7 @@
 #include "ServerProcess.h"
 #include "DummyReader.h"
 #include "I2CDataReader.h"
+#include "Logger.h"
 #include <array>
 #include <chrono>
 #include <cstring>
@@ -18,8 +19,10 @@ using namespace std;
 
 static constexpr int LISTEN_BACKLOG = 5;
 
-ServerProcess::ServerProcess(const Configuration& cfg) :
+ServerProcess::ServerProcess(const Configuration& cfg,
+	shared_ptr<Logger> logger) :
 	mConfig(cfg),
+	mLogger(move(logger)),
 	mShutdown(false)
 {
 	if (cfg.useDummyReader)
@@ -93,9 +96,11 @@ void ServerProcess::run()
 		const auto sd = accept(mSD, &addr, &addrlen);
 		if (sd == -1)
 		{
-			cerr << "Failed to accept connection." << endl;
+			mLogger->write(LogLevel::ERROR, "Failed to accept connection.");
 			continue;
 		}
+
+		mLogger->write(LogLevel::TRACE, "Accepted new connection.");
 
 		mUpdateLock.lock();
 		const auto data = mTextData;
@@ -105,7 +110,7 @@ void ServerProcess::run()
 		const auto written = write(sd, data.c_str(), data.size());
 		if (written == -1)
 		{
-			cerr << "Failed to write data." << endl;
+			mLogger->write(LogLevel::ERROR, "Failed to write data.");
 		}
 
 		close(sd);
@@ -125,6 +130,8 @@ void ServerProcess::updateData()
 		SensorData data;
 		while (!mShutdown)
 		{
+			mLogger->write(LogLevel::TRACE, "Reading sensor data.");
+
 			mReader->read(data);
 
 			ostringstream text;
@@ -141,6 +148,8 @@ void ServerProcess::updateData()
 	}
 	catch (const exception& ex)
 	{
+		mLogger->write(LogLevel::ERROR, ex.what());
+		// TODO This does not stop the server if accept() is blocking.
 		mShutdown = true;
 	}
 }
