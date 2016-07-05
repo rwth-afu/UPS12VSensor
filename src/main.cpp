@@ -9,7 +9,7 @@
 
 using namespace std;
 
-std::shared_ptr<Logger> g_logger;
+static shared_ptr<Logger> g_logger;
 
 /*
 static void onShutdownSignal(int value)
@@ -91,8 +91,16 @@ static bool parseArgs(int argc, char* argv[], ServerProcess::Configuration& cfg)
 
 int main(int argc, char* argv[])
 {
-	// TODO Init logger based on config
-	g_logger = make_shared<Logger>(LogLevel::TRACE);
+	try
+	{
+		// TODO Init logger based on config
+		g_logger = make_shared<Logger>(LogLevel::TRACE);
+	}
+	catch (const exception& ex)
+	{
+		cerr << "Failed to init logger: " << ex.what() << endl;
+		return EXIT_FAILURE;
+	}
 
 	try
 	{
@@ -103,7 +111,7 @@ int main(int argc, char* argv[])
 		}
 
 		//setupSignalHandler();
-		ServerProcess proc(cfg);
+		ServerProcess proc(cfg, g_logger);
 		proc.run();
 
 		return EXIT_SUCCESS;

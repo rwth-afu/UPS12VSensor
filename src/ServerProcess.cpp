@@ -19,11 +19,10 @@ using namespace std;
 
 static constexpr int LISTEN_BACKLOG = 5;
 
-// Ugly but works :D
-extern std::shared_ptr<Logger> g_logger;
-
-ServerProcess::ServerProcess(const Configuration& cfg) :
+ServerProcess::ServerProcess(const Configuration& cfg,
+	shared_ptr<Logger> logger) :
 	mConfig(cfg),
+	mLogger(move(logger)),
 	mShutdown(false)
 {
 	if (cfg.useDummyReader)
@@ -97,11 +96,11 @@ void ServerProcess::run()
 		const auto sd = accept(mSD, &addr, &addrlen);
 		if (sd == -1)
 		{
-			g_logger->write(LogLevel::ERROR, "Failed to accept connection.");
+			mLogger->write(LogLevel::ERROR, "Failed to accept connection.");
 			continue;
 		}
 
-		g_logger->write(LogLevel::TRACE, "Accepted new connection.");
+		mLogger->write(LogLevel::TRACE, "Accepted new connection.");
 
 		mUpdateLock.lock();
 		const auto data = mTextData;
@@ -111,7 +110,7 @@ void ServerProcess::run()
 		const auto written = write(sd, data.c_str(), data.size());
 		if (written == -1)
 		{
-			g_logger->write(LogLevel::ERROR, "Failed to write data.");
+			mLogger->write(LogLevel::ERROR, "Failed to write data.");
 		}
 
 		close(sd);
@@ -131,7 +130,7 @@ void ServerProcess::updateData()
 		SensorData data;
 		while (!mShutdown)
 		{
-			g_logger->write(LogLevel::TRACE, "Reading sensor data.");
+			mLogger->write(LogLevel::TRACE, "Reading sensor data.");
 
 			mReader->read(data);
 
@@ -149,7 +148,7 @@ void ServerProcess::updateData()
 	}
 	catch (const exception& ex)
 	{
-		g_logger->write(LogLevel::ERROR, ex.what());
+		mLogger->write(LogLevel::ERROR, ex.what());
 		// TODO This does not stop the server if accept() is blocking.
 		mShutdown = true;
 	}

@@ -5,6 +5,7 @@
 #include <mutex>
 
 class IDataReader;
+class Logger;
 
 class ServerProcess
 {
@@ -17,7 +18,8 @@ public:
 	};
 
 public:
-	ServerProcess(const Configuration& cfg);
+	ServerProcess(const Configuration& cfg,
+		std::shared_ptr<Logger> logger);
 
 	ServerProcess(const ServerProcess& o) = delete;
 
@@ -34,6 +36,7 @@ private:
 
 private:
 	const Configuration mConfig;
+	const std::shared_ptr<Logger> mLogger;
 	std::string mTextData;
 	std::unique_ptr<IDataReader> mReader;
 	std::mutex mUpdateLock;
