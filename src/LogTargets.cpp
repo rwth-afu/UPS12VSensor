@@ -24,9 +24,25 @@ ostream& operator<<(ostream& os, LogLevel level)
 	return os;
 }
 
-void ConsoleLogTarget::write(LogLevel level, const string& message)
+static string toLocalTime(const time_t& ts)
 {
-	cout << "[" << level << "] " << message << endl;
+	const auto ltm = localtime(&ts);
+	char buffer[80];
+	if (strftime(buffer, sizeof(buffer), "%F %T", ltm) > 0)
+	{
+		return buffer;
+	}
+	else
+	{
+		return string();
+	}
+}
+
+void ConsoleLogTarget::write(const time_t& ts, LogLevel level,
+	const string& message)
+{
+	// std::put_time from <iomanip> not yet supported by all compilers
+	cout << toLocalTime(ts) << " [" << level << "] " << message << endl;
 }
 
 FileLogTarget::FileLogTarget(const string& filename) :
@@ -34,7 +50,8 @@ FileLogTarget::FileLogTarget(const string& filename) :
 {
 }
 
-void FileLogTarget::write(LogLevel level, const string& message)
+void FileLogTarget::write(const time_t& ts, LogLevel level,
+	const string& message)
 {
-	mOut << "[" << level << "] " << message << endl;
+	mOut << toLocalTime(ts) << " [" << level << "] " << message << endl;
 }

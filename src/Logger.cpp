@@ -20,9 +20,11 @@ void Logger::write(LogLevel level, const string& msg)
 
 	if (mLevel <= level)
 	{
+		const auto ts = time(nullptr);
+
 		for (const auto& target : mTargets)
 		{
-			target->write(level, msg);
+			target->write(ts, level, msg);
 		}
 	}
 }
