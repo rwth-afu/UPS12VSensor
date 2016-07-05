@@ -1,8 +1,8 @@
 #!/usr/bin/perl -w
 #
 # Check values of voltages and currents from 12 V UPS Board
-# Ralf Wilke rwth-afu@online.de
-# Last change: 4.7.2016
+# Ralf Wilke DH3WR rwth-afu@online.de
+# Last change: 5.7.2016
 
 
 use strict;
@@ -11,7 +11,7 @@ use Getopt::Std;
 use IO::Socket::INET;
 
 my $server_host = "localhost";
-my $server_port = "1337";
+my $server_port = "50033";
 
 my(%ERRORS) = ( OK=>0, WARNING=>1, CRITICAL=>2, UNKNOWN=>3 );
 
@@ -143,6 +143,8 @@ unless (($value =~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) || ($value =~ /^[+-]?\d+$/)) #
 {
         $message="Did not got an integer or a decimal as value";
         $status=$ERRORS{UNKNOWN};
+		print "$message\n";
+		exit $status;
 }
 #$value = sprintf("%.2f", $value);
 
@@ -151,7 +153,6 @@ if ($debug_flag) {
 	print "opt_c:$opt_c opt_w:$opt_w opt_W:$opt_W opt_C:$opt_C opt_h:$opt_h opt_d:$opt_d opt_s:$opt_s\n";
 	print "Value: $value\n";
 }
-
 
 
 if ($value <= $opt_c) {
@@ -172,6 +173,8 @@ if ($value <= $opt_c) {
 } else { #This should never happen
         $status=$ERRORS{UNKNOWN};
         $message="UNKNOWN";
+		print "$message\n";
+		exit $status;
 }
 
 my $output = "";
@@ -208,6 +211,5 @@ if ($opt_s eq "BAT") {
 }
 	
 print $output;
-#print "$message: $value C\|temperature=$value;$opt_c;$opt_w;$opt_W;$opt_C\n";
 exit $status;
 
