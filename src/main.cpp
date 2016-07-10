@@ -9,8 +9,17 @@
 #include <stdexcept>
 #include <string>
 #include <unistd.h>
+#include <libconfig.h++>
 
 using namespace std;
+
+struct Configuration
+{
+	string logFile;
+	int port;
+	bool useLogFile;
+	bool useDummy;
+};
 
 static const char* opt_configFile = "/etc/default/I2CSwitchBoard.conf";
 static unique_ptr<ServerProcess> process;
@@ -88,6 +97,37 @@ static bool parseArgs(int argc, char* argv[])
 	return true;
 }
 
+static Configuration readConfig()
+{
+	libconfig::Config cfgFile;
+	cfgFile.readFile(opt_configFile);
+
+	Configuration cfg;
+	const auto& root = cfgFile.getRoot();
+
+	if (!root.lookupValue("port", cfg.port))
+	{
+		cfg.port = 50033;
+	}
+
+	if (!root.lookupValue("use_dummy_reader", cfg.useDummy))
+	{
+		cfg.useDummy = false;
+	}
+
+	if (!root.lookupValue("use_log_file", cfg.useLogFile))
+	{
+		cfg.useLogFile = false;
+	}
+
+	if (!root.lookupValue("log_file_path", cfg.logFile))
+	{
+		cfg.logFile = "/var/log/I2CSwitchBoard.log";
+	}
+
+	return cfg;
+}
+
 int main(int argc, char* argv[])
 {
 	int status = EXIT_SUCCESS;
@@ -100,12 +140,29 @@ int main(int argc, char* argv[])
 
 		if (parseArgs(argc, argv))
 		{
-			auto reader = unique_ptr<IDataReader>(new DummyDataReader());
+			const auto cfg = readConfig();
+
+			if (cfg.useLogFile)
+			{
+				logger->addTarget(ILogTarget::Ptr(
+					new FileLogTarget(cfg.logFile)));
+			}
+
+			unique_ptr<IDataReader> reader;
+			if (cfg.useDummy)
+			{
+				reader.reset(new DummyDataReader());
+			}
+			else
+			{
+				reader.reset(new I2CDataReader());
+			}
+
 			process.reset(new ServerProcess(logger, move(reader)));
 
 			setupSignalHandlers();
 
-			process->run(50033);
+			process->run(cfg.port);
 		}
 		else
 		{
