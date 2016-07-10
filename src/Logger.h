@@ -1,8 +1,8 @@
 #pragma once
 
 #include "LogTargets.h"
-#include <memory>
-#include <mutex>
+#include "ConcurrentQueue.h"
+#include <thread>
 #include <vector>
 
 class Logger
@@ -12,16 +12,25 @@ public:
 
 	Logger(const Logger& o) = delete;
 
-	Logger(LogLevel level, const std::string& filename);
-
-	~Logger() = default;
+	~Logger();
 
 	Logger& operator=(const Logger& o) = delete;
 
-	void write(LogLevel level, const std::string& msg);
+	void addTarget(ILogTarget::Ptr target);
+
+	void log(LogLevel level, std::string&& message);
 
 private:
-	std::vector<std::unique_ptr<ILogTarget>> mTargets;
-	const LogLevel mLevel;
+	void workerProc();
+
+private:
+	std::vector<ILogTarget::Ptr> mTargets;
+
+	struct LogEvent;
+	ConcurrentQueue<LogEvent> mLogEvents;
+
 	std::mutex mMutex;
+	std::thread mWorker;
+
+	const LogLevel mLevel;
 };

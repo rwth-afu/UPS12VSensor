@@ -2,7 +2,7 @@
 
 #include <atomic>
 #include <memory>
-#include <mutex>
+#include <string>
 
 class IDataReader;
 class Logger;
@@ -10,16 +10,8 @@ class Logger;
 class ServerProcess
 {
 public:
-	struct Configuration
-	{
-		int port;
-		int pollInterval;
-		bool useDummyReader;
-	};
-
-public:
-	ServerProcess(const Configuration& cfg,
-		std::shared_ptr<Logger> logger);
+	ServerProcess(std::shared_ptr<Logger> logger,
+		std::unique_ptr<IDataReader> reader);
 
 	ServerProcess(const ServerProcess& o) = delete;
 
@@ -27,19 +19,21 @@ public:
 
 	ServerProcess& operator=(const ServerProcess& o) = delete;
 
-	void run();
+	void run(int port);
 
 	void stop();
 
 private:
 	void updateData();
+	void serverLoop();
+	void acceptClient();
+
+	static void setNonBlocking(int fd);
 
 private:
-	const Configuration mConfig;
-	const std::shared_ptr<Logger> mLogger;
-	std::string mTextData;
+	std::shared_ptr<Logger> mLogger;
 	std::unique_ptr<IDataReader> mReader;
-	std::mutex mUpdateLock;
-	std::atomic_bool mShutdown;
+	std::atomic_bool mKill;
+	std::string mTextData;
 	int mSD;
 };

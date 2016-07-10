@@ -3,10 +3,10 @@
 #include "IDataReader.h"
 #include <random>
 
-class DummyReader : public IDataReader
+class DummyDataReader : public IDataReader
 {
 public:
-	DummyReader() :
+	DummyDataReader() :
 		mVolts(11.8, 12.8),
 		mCurrents(0.0, 4.0)
 	{
@@ -14,7 +14,7 @@ public:
 		mRNG = std::mt19937(rd());
 	}
 
-	virtual ~DummyReader() = default;
+	virtual ~DummyDataReader() = default;
 
 	virtual void read(SensorData& data) override
 	{

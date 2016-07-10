@@ -1,30 +1,83 @@
 #include "Logger.h"
+#include <iostream>
 
 using namespace std;
+
+struct Logger::LogEvent
+{
+	const time_t ts;
+	const LogLevel level;
+	const string message;
+
+	LogEvent(LogLevel level, const string& message) :
+		ts(time(nullptr)),
+		level(level),
+		message(message)
+	{
+	}
+};
 
 Logger::Logger(LogLevel level) :
 	mLevel(level)
 {
-	mTargets.emplace_back(new ConsoleLogTarget());
+	// Start worker thread
+	mWorker = thread(&Logger::workerProc, this);
 }
 
-Logger::Logger(LogLevel level, const string& filename) :
-	Logger(level)
+Logger::~Logger()
 {
-	mTargets.emplace_back(new FileLogTarget(filename));
+	try
+	{
+		if (mWorker.joinable())
+		{
+			mLogEvents.notifyWaiting();
+			mWorker.detach();
+		}
+	}
+	catch (const exception& ex)
+	{
+		// ignore it :)
+	}
 }
 
-void Logger::write(LogLevel level, const string& msg)
+void Logger::log(LogLevel level, string&& message)
 {
-	// mLevel is const, no need for a lock here
+	// TODO Check if worker thread is running
+
 	if (mLevel <= level)
 	{
-		lock_guard<mutex> lock(mMutex);
-		const auto ts = time(nullptr);
+		mLogEvents.emplace(level, move(message));
+	}
+}
 
-		for (const auto& target : mTargets)
+void Logger::addTarget(ILogTarget::Ptr target)
+{
+	lock_guard<mutex> lck(mMutex);
+	mTargets.push_back(move(target));
+}
+
+void Logger::workerProc()
+{
+	try
+	{
+		while (true)
 		{
-			target->write(ts, level, msg);
+			auto ev = mLogEvents.pop();
+
+			lock_guard<mutex> lck(mMutex);
+			for (const auto& target : mTargets)
+			{
+				target->write(ev.ts, ev.level, ev.message);
+			}
 		}
+	}
+	catch (const InterruptedException& ex)
+	{
+		// Queue received kill event
+	}
+	catch (const exception& ex)
+	{
+		cerr << "Logger: " << ex.what() << endl;
+		// TODO Stop application?
 	}
 }
