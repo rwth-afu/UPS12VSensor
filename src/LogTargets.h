@@ -39,6 +39,12 @@ class FileLogTarget : public ILogTarget
 public:
 	FileLogTarget(const std::string& filename);
 
+	FileLogTarget(const FileLogTarget& o) = delete;
+
+	virtual ~FileLogTarget() = default;
+
+	FileLogTarget& operator=(const FileLogTarget& o) = delete;
+
 	virtual void write(const std::time_t& ts, LogLevel level,
 		const std::string& message) override;
 

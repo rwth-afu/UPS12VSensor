@@ -4,10 +4,13 @@
 #include "I2CDataReader.h"
 #include <chrono>
 #include <csignal>
+#include <cstring>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <libconfig.h++>
 
@@ -141,6 +144,50 @@ static bool daemonize()
 		return true;
 	}
 
+	auto pid = fork();
+	if (pid < 0)
+	{
+		throw runtime_error("fork() failed.");
+	}
+	else if (pid > 0)
+	{
+		return false;
+	}
+
+	auto sid = setsid();
+	if (sid < 0)
+	{
+		throw runtime_error("setsid() failed.");
+	}
+
+	signal(SIGHUP, SIG_IGN);
+
+	pid = fork();
+	if (pid < 0)
+	{
+		throw runtime_error("fork() #2 failed.");
+	}
+	else if (pid > 0)
+	{
+		return false;
+	}
+
+	umask(0);
+
+	if (chdir("/") == -1)
+	{
+		throw runtime_error("chdir() failed.");
+	}
+
+	for (auto fd = sysconf(_SC_OPEN_MAX); fd >= 0; --fd)
+	{
+		close(fd);
+	}
+
+	//stdin = fopen("/dev/null", "r");
+	//stdout = fopen("/dev/null", "w+");
+	//stderr = fopen("/dev/null", "w+");
+
 	return true;
 }
 
@@ -157,10 +204,12 @@ static void run()
 	unique_ptr<IDataReader> reader;
 	if (cfg.useDummy)
 	{
+		logger->log(LogLevel::DEBUG, "Creating dummy data reader.");
 		reader.reset(new DummyDataReader());
 	}
 	else
 	{
+		logger->log(LogLevel::DEBUG, "Creating I2C data reader.");
 		reader.reset(new I2CDataReader());
 	}
 
@@ -178,7 +227,7 @@ int main(int argc, char* argv[])
 	try
 	{
 		logger = make_shared<Logger>(LogLevel::DEBUG);
-		logger->addTarget(ILogTarget::Ptr(new ConsoleLogTarget()));
+		//logger->addTarget(ILogTarget::Ptr(new ConsoleLogTarget()));
 
 		if (parseArgs(argc, argv))
 		{
@@ -200,7 +249,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			cerr << "Fatal: " << ex.what() << endl;
+			//cerr << "Fatal: " << ex.what() << endl;
 		}
 
 		status = EXIT_FAILURE;
