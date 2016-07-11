@@ -1,0 +1,12 @@
+Makefile:
+
+Install into "good" dir
+Check if Nagios and Munin are installed
+Install plugins into directories
+	/usr/lib/nagios/plugins/check_UPS_12V.pl
+	/usr/share/munin/plugins
+	
+Install Munin Symlink to activate Plugin
+Install plugins/nagios/UPS_12V.cfg nach /etc/nagios/nrpe.d/
+
+Reload munin and nagios services
