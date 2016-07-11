@@ -22,6 +22,8 @@ struct Configuration
 };
 
 static const char* opt_configFile = "/etc/default/I2CSwitchBoard.conf";
+static bool opt_daemonize = false;
+static shared_ptr<Logger> logger;
 static unique_ptr<ServerProcess> process;
 
 static void printVersion()
@@ -34,6 +36,7 @@ static void printHelp()
 {
 	cout << "Usage: I2CSwitchBoard [-c path] [-h] [-v]" << endl;
 	cout << " -c path Specify path to configuration file." << endl;
+	cout << " -d      Run as daemon." << endl;
 	cout << " -h      Show this help text." << endl;
 	cout << " -v      Print version information." << endl;
 }
@@ -76,12 +79,15 @@ static void setupSignalHandlers()
 static bool parseArgs(int argc, char* argv[])
 {
 	int ch;
-	while ((ch = getopt(argc, argv, "c:hv")) != -1)
+	while ((ch = getopt(argc, argv, "c:dhv")) != -1)
 	{
 		switch (ch)
 		{
 		case 'c':
 			opt_configFile = optarg;
+			break;
+		case 'd':
+			opt_daemonize = true;
 			break;
 		case 'h':
 			printHelp();
@@ -128,10 +134,46 @@ static Configuration readConfig()
 	return cfg;
 }
 
+static bool daemonize()
+{
+	if (!opt_daemonize)
+	{
+		return true;
+	}
+
+	return true;
+}
+
+static void run()
+{
+	const auto cfg = readConfig();
+
+	if (cfg.useLogFile)
+	{
+		logger->addTarget(ILogTarget::Ptr(
+		new FileLogTarget(cfg.logFile)));
+	}
+
+	unique_ptr<IDataReader> reader;
+	if (cfg.useDummy)
+	{
+		reader.reset(new DummyDataReader());
+	}
+	else
+	{
+		reader.reset(new I2CDataReader());
+	}
+
+	process.reset(new ServerProcess(logger, move(reader)));
+
+	setupSignalHandlers();
+
+	process->run(cfg.port);
+}
+
 int main(int argc, char* argv[])
 {
 	int status = EXIT_SUCCESS;
-	shared_ptr<Logger> logger;
 
 	try
 	{
@@ -140,29 +182,10 @@ int main(int argc, char* argv[])
 
 		if (parseArgs(argc, argv))
 		{
-			const auto cfg = readConfig();
-
-			if (cfg.useLogFile)
+			if (daemonize())
 			{
-				logger->addTarget(ILogTarget::Ptr(
-					new FileLogTarget(cfg.logFile)));
+				run();
 			}
-
-			unique_ptr<IDataReader> reader;
-			if (cfg.useDummy)
-			{
-				reader.reset(new DummyDataReader());
-			}
-			else
-			{
-				reader.reset(new I2CDataReader());
-			}
-
-			process.reset(new ServerProcess(logger, move(reader)));
-
-			setupSignalHandlers();
-
-			process->run(cfg.port);
 		}
 		else
 		{
