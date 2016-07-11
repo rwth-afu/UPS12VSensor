@@ -16,10 +16,10 @@ Logger::Logger(LogLevel level, const string& filename) :
 
 void Logger::write(LogLevel level, const string& msg)
 {
-	lock_guard<mutex> lock(mMutex);
-
+	// mLevel is const, no need for a lock here
 	if (mLevel <= level)
 	{
+		lock_guard<mutex> lock(mMutex);
 		const auto ts = time(nullptr);
 
 		for (const auto& target : mTargets)
