@@ -2,7 +2,7 @@
 # Munin Plugin for 12 V UPS made by RWTH Ham Radio Group
 # Project Repository https://github.com/dh3wr/UPS12VSensor
 
-# Author: Ralf Wilke DH3WR
+# Author: Ralf Wilke DH3WR rwth-afu@online.de
 # Last change: 5.7.2016
 
 
