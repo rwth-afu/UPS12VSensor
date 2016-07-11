@@ -249,7 +249,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			//cerr << "Fatal: " << ex.what() << endl;
+			cerr << "Fatal: " << ex.what() << endl;
 		}
 
 		status = EXIT_FAILURE;
