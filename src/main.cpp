@@ -22,7 +22,7 @@ struct Configuration
 	bool useLogFile;
 };
 
-static const char* opt_configFile = "/etc/default/I2CSwitchBoard.conf";
+static const char* opt_configFile = "/etc/I2CSwitchBoard.conf";
 static unique_ptr<ServerProcess> process;
 
 static void printVersion()

@@ -1,0 +1,4 @@
+# I2CSwitchBoard default environment
+
+# Options appended to the command line
+#I2CSB_OPTS="-c /etc/I2CSwitchBoard.conf"

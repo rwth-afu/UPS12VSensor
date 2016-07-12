@@ -4,7 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/I2CSwitchBoard > /dev/null &
+Environment=/etc/default/IC2SwitchBoard
+ExecStart=/usr/local/bin/I2CSwitchBoard ${IC2SB_OPTS} > /dev/null &
 Restart=always
 User=root
 Group=root
