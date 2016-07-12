@@ -54,6 +54,8 @@ void ServerProcess::run(int port)
 		return;
 	}
 
+	mLogger->log(LogLevel::DEBUG, "Starting server process.");
+
 	mSD = socket(AF_INET, SOCK_STREAM, 0);
 	if (mSD == -1)
 	{

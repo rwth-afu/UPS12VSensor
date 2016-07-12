@@ -19,8 +19,8 @@ using namespace std;
 struct Configuration
 {
 	string logFile;
+	LogLevel logLevel;
 	int port;
-	bool useLogFile;
 	bool useDummy;
 };
 
@@ -124,9 +124,30 @@ static Configuration readConfig()
 		cfg.useDummy = false;
 	}
 
-	if (!root.lookupValue("use_log_file", cfg.useLogFile))
+	int level;
+	if (root.lookupValue("log_level", level))
 	{
-		cfg.useLogFile = false;
+		switch (level)
+		{
+		case 0:
+			cfg.logLevel = LogLevel::DEBUG;
+			break;
+		case 1:
+			cfg.logLevel = LogLevel::INFO;
+			break;
+		case 2:
+			cfg.logLevel = LogLevel::WARN;
+			break;
+		case 3:
+			cfg.logLevel = LogLevel::ERROR;
+			break;
+		default:
+			cfg.logLevel = LogLevel::INFO;
+		}
+	}
+	else
+	{
+		cfg.logLevel = LogLevel::INFO;
 	}
 
 	if (!root.lookupValue("log_file_path", cfg.logFile))
@@ -195,11 +216,9 @@ static void run()
 {
 	const auto cfg = readConfig();
 
-	if (cfg.useLogFile)
-	{
-		logger->addTarget(ILogTarget::Ptr(
+	logger = make_shared<Logger>(LogLevel::DEBUG);
+	logger->addTarget(ILogTarget::Ptr(
 		new FileLogTarget(cfg.logFile)));
-	}
 
 	unique_ptr<IDataReader> reader;
 	if (cfg.useDummy)
@@ -226,7 +245,7 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		logger = make_shared<Logger>(LogLevel::DEBUG);
+		//logger = make_shared<Logger>(LogLevel::DEBUG);
 		//logger->addTarget(ILogTarget::Ptr(new ConsoleLogTarget()));
 
 		if (parseArgs(argc, argv))
@@ -254,9 +273,6 @@ int main(int argc, char* argv[])
 
 		status = EXIT_FAILURE;
 	}
-
-	// Wait some time so pending log events get processed.
-	this_thread::sleep_for(chrono::seconds(1));
 
 	return status;
 }
