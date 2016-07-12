@@ -1,13 +1,15 @@
 #pragma once
 
 #include <ctime>
-#include <string>
 #include <fstream>
+#include <memory>
+#include <string>
 
 enum class LogLevel
 {
-	TRACE,
+	DEBUG,
 	INFO,
+	WARN,
 	ERROR
 };
 
@@ -16,19 +18,20 @@ std::ostream& operator<<(std::ostream& os, LogLevel level);
 class ILogTarget
 {
 public:
+	using Ptr = std::unique_ptr<ILogTarget>;
+
+public:
 	virtual ~ILogTarget() = default;
 
-	virtual void write(const std::time_t& ts, LogLevel level,
-		const std::string& msg) = 0;
+	virtual void write(const std::time_t& ts, LogLevel,
+		const std::string& message) = 0;
 };
 
 class ConsoleLogTarget : public ILogTarget
 {
 public:
-	virtual ~ConsoleLogTarget() = default;
-
-	virtual void write(const std::time_t& ts,
-		LogLevel level, const std::string& msg) override;
+	virtual void write(const std::time_t& ts, LogLevel level,
+		const std::string& message) override;
 };
 
 class FileLogTarget : public ILogTarget
@@ -36,11 +39,15 @@ class FileLogTarget : public ILogTarget
 public:
 	FileLogTarget(const std::string& filename);
 
+	FileLogTarget(const FileLogTarget& o) = delete;
+
 	virtual ~FileLogTarget() = default;
 
-	virtual void write(const std::time_t& ts,
-		LogLevel level, const std::string& msg) override;
+	FileLogTarget& operator=(const FileLogTarget& o) = delete;
+
+	virtual void write(const std::time_t& ts, LogLevel level,
+		const std::string& message) override;
 
 private:
-	std::ofstream mOut;
+	std::ofstream mLog;
 };

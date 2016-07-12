@@ -1,7 +1,6 @@
 #pragma once
 
 #include "LogTargets.h"
-#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -12,16 +11,16 @@ public:
 
 	Logger(const Logger& o) = delete;
 
-	Logger(LogLevel level, const std::string& filename);
-
 	~Logger() = default;
 
 	Logger& operator=(const Logger& o) = delete;
 
-	void write(LogLevel level, const std::string& msg);
+	void addTarget(ILogTarget::Ptr target);
+
+	void log(LogLevel level, const std::string& message);
 
 private:
-	std::vector<std::unique_ptr<ILogTarget>> mTargets;
 	const LogLevel mLevel;
+	std::vector<ILogTarget::Ptr> mTargets;
 	std::mutex mMutex;
 };

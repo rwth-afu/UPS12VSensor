@@ -4,6 +4,8 @@ build/
 *.geany
 # Ignore local files
 *.local
+# Ignore log files
+*.log
 
 # =========================
 # Operating System Files
