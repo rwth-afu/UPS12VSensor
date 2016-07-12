@@ -2,15 +2,12 @@
 #include "ServerProcess.h"
 #include "DummyDataReader.h"
 #include "I2CDataReader.h"
-#include <chrono>
 #include <csignal>
-#include <cstring>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <getopt.h>
 #include <unistd.h>
 #include <libconfig.h++>
 
@@ -22,11 +19,10 @@ struct Configuration
 	LogLevel logLevel;
 	int port;
 	bool useDummy;
+	bool useLogFile;
 };
 
 static const char* opt_configFile = "/etc/default/I2CSwitchBoard.conf";
-static bool opt_daemonize = false;
-static shared_ptr<Logger> logger;
 static unique_ptr<ServerProcess> process;
 
 static void printVersion()
@@ -37,20 +33,22 @@ static void printVersion()
 
 static void printHelp()
 {
-	cout << "Usage: I2CSwitchBoard [-c path] [-h] [-v]" << endl;
-	cout << " -c path Specify path to configuration file." << endl;
-	cout << " -d      Run as daemon." << endl;
-	cout << " -h      Show this help text." << endl;
-	cout << " -v      Print version information." << endl;
+	cout << "Usage: I2CSwitchBoard [Options]" << endl << endl;
+	cout << "Options:" << endl;
+	cout << " -c --config  filename  Specify path to configuration file." <<
+		endl;
+	cout << " -h --help              Show this help text." << endl;
+	cout << " -v --version           Print version information." << endl;
+	cout << endl;
 }
 
 static void signalHandler(int sig)
 {
 	switch (sig)
 	{
+	case SIGHUP:
 	case SIGTERM:
 	case SIGINT:
-	case SIGHUP:
 		process->stop();
 		break;
 	}
@@ -81,16 +79,21 @@ static void setupSignalHandlers()
 
 static bool parseArgs(int argc, char* argv[])
 {
+	static option opts[] =
+	{
+		{"config", required_argument, nullptr, 'c'},
+		{"help", no_argument, nullptr, 'h'},
+		{"version", no_argument, nullptr, 'v'},
+		{nullptr, 0, nullptr, 0}
+	};
+
 	int ch;
-	while ((ch = getopt(argc, argv, "c:dhv")) != -1)
+	while ((ch = getopt_long(argc, argv, "c:dhv", opts, nullptr)) != -1)
 	{
 		switch (ch)
 		{
 		case 'c':
 			opt_configFile = optarg;
-			break;
-		case 'd':
-			opt_daemonize = true;
 			break;
 		case 'h':
 			printHelp();
@@ -150,6 +153,11 @@ static Configuration readConfig()
 		cfg.logLevel = LogLevel::INFO;
 	}
 
+	if (!root.lookupValue("use_log_file", cfg.useLogFile))
+	{
+		cfg.useLogFile = false;
+	}
+
 	if (!root.lookupValue("log_file_path", cfg.logFile))
 	{
 		cfg.logFile = "/var/log/I2CSwitchBoard.log";
@@ -158,107 +166,45 @@ static Configuration readConfig()
 	return cfg;
 }
 
-static bool daemonize()
-{
-	if (!opt_daemonize)
-	{
-		return true;
-	}
-
-	auto pid = fork();
-	if (pid < 0)
-	{
-		throw runtime_error("fork() failed.");
-	}
-	else if (pid > 0)
-	{
-		return false;
-	}
-
-	auto sid = setsid();
-	if (sid < 0)
-	{
-		throw runtime_error("setsid() failed.");
-	}
-
-	signal(SIGHUP, SIG_IGN);
-
-	pid = fork();
-	if (pid < 0)
-	{
-		throw runtime_error("fork() #2 failed.");
-	}
-	else if (pid > 0)
-	{
-		return false;
-	}
-
-	umask(0);
-
-	if (chdir("/") == -1)
-	{
-		throw runtime_error("chdir() failed.");
-	}
-
-	for (auto fd = sysconf(_SC_OPEN_MAX); fd >= 0; --fd)
-	{
-		close(fd);
-	}
-
-	//stdin = fopen("/dev/null", "r");
-	//stdout = fopen("/dev/null", "w+");
-	//stderr = fopen("/dev/null", "w+");
-
-	return true;
-}
-
-static void run()
-{
-	const auto cfg = readConfig();
-
-	logger = make_shared<Logger>(LogLevel::DEBUG);
-	logger->addTarget(ILogTarget::Ptr(
-		new FileLogTarget(cfg.logFile)));
-
-	unique_ptr<IDataReader> reader;
-	if (cfg.useDummy)
-	{
-		logger->log(LogLevel::DEBUG, "Creating dummy data reader.");
-		reader.reset(new DummyDataReader());
-	}
-	else
-	{
-		logger->log(LogLevel::DEBUG, "Creating I2C data reader.");
-		reader.reset(new I2CDataReader());
-	}
-
-	process.reset(new ServerProcess(logger, move(reader)));
-
-	setupSignalHandlers();
-
-	process->run(cfg.port);
-}
-
 int main(int argc, char* argv[])
 {
-	int status = EXIT_SUCCESS;
+	shared_ptr<Logger> logger;
 
 	try
 	{
-		//logger = make_shared<Logger>(LogLevel::DEBUG);
-		//logger->addTarget(ILogTarget::Ptr(new ConsoleLogTarget()));
+		logger = make_shared<Logger>(LogLevel::DEBUG);
+		logger->addTarget(ILogTarget::Ptr(new ConsoleLogTarget()));
 
-		if (parseArgs(argc, argv))
+		if (!parseArgs(argc, argv))
 		{
-			if (daemonize())
-			{
-				run();
-			}
+			return EXIT_FAILURE;
+		}
+
+		const auto cfg = readConfig();
+
+		if (cfg.useLogFile)
+		{
+			logger->addTarget(ILogTarget::Ptr(
+				new FileLogTarget(cfg.logFile)));
+		}
+
+		unique_ptr<IDataReader> reader;
+		if (cfg.useDummy)
+		{
+			logger->log(LogLevel::DEBUG, "Creating dummy data reader.");
+			reader.reset(new DummyDataReader());
 		}
 		else
 		{
-			status = EXIT_FAILURE;
+			logger->log(LogLevel::DEBUG, "Creating I2C data reader.");
+			reader.reset(new I2CDataReader());
 		}
+
+		process.reset(new ServerProcess(logger, move(reader)));
+
+		setupSignalHandlers();
+
+		process->run(cfg.port);
 	}
 	catch (const exception& ex)
 	{
@@ -271,8 +217,8 @@ int main(int argc, char* argv[])
 			cerr << "Fatal: " << ex.what() << endl;
 		}
 
-		status = EXIT_FAILURE;
+		return EXIT_FAILURE;
 	}
 
-	return status;
+	return EXIT_SUCCESS;
 }

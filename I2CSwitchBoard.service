@@ -1,0 +1,13 @@
+[Unit]
+Description=I2C switch board monitoring
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/I2CSwitchBoard > /dev/null &
+Restart=always
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
