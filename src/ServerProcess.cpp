@@ -144,7 +144,7 @@ void ServerProcess::acceptClient()
 		return;
 	}
 
-	mLogger->log(LogLevel::INFO, "Client connected.");
+	mLogger->log(LogLevel::DEBUG, "Client connected.");
 
 	const auto len = write(fd, mTextData.c_str(), mTextData.size());
 	if (len == -1)
@@ -154,7 +154,7 @@ void ServerProcess::acceptClient()
 
 	close(fd);
 
-	mLogger->log(LogLevel::INFO, "Client connection closed.");
+	mLogger->log(LogLevel::DEBUG, "Client connection closed.");
 }
 
 void ServerProcess::setNonBlocking(int fd)
