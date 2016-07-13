@@ -21,6 +21,7 @@ systemd
 =======
 
 * sudo cp I2CswitchBoard.service /lib/systemd/system/
+* (edit file as needed)
 * sudo systemctl enable I2CSwitchBoard.service
 * sudo systemctl start I2CSwitchBoard.service
 
