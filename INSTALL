@@ -1,0 +1,26 @@
+Build
+=====
+
+Execute make in main directory.
+
+Packets required (Debian): libi2c-dev libconfig++-dev
+
+Install program: sudo cp build/I2CSwitchBoard /usr/local/bin
+
+Configuration
+=============
+
+* sudo cp I2CSwitchBoard.conf /etc/
+* (edit file as needed)
+* sudo cp I2CSwitchBoard.default /etc/default/I2CSwitchBoard
+* (edit file as needed)
+
+If log file is enabled ensure it is writable by the executing user.
+
+systemd
+=======
+
+* sudo cp I2CswitchBoard.service /lib/systemd/system/
+* sudo systemctl enable I2CSwitchBoard.service
+* sudo systemctl start I2CSwitchBoard.service
+

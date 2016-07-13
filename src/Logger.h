@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LogTargets.h"
+#include <atomic>
 #include <mutex>
 #include <vector>
 
@@ -17,10 +18,14 @@ public:
 
 	void addTarget(ILogTarget::Ptr target);
 
+	void setLogLevel(LogLevel level);
+
+	LogLevel getLogLevel() const;
+
 	void log(LogLevel level, const std::string& message);
 
 private:
-	const LogLevel mLevel;
+	std::atomic<LogLevel> mLevel;
 	std::vector<ILogTarget::Ptr> mTargets;
 	std::mutex mMutex;
 };

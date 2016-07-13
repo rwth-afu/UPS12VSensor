@@ -26,3 +26,8 @@ void Logger::addTarget(ILogTarget::Ptr target)
 	lock_guard<mutex> lck(mMutex);
 	mTargets.push_back(move(target));
 }
+
+void Logger::setLogLevel(LogLevel level)
+{
+	mLevel = level;
+}

@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		logger = make_shared<Logger>(LogLevel::DEBUG);
+		logger = make_shared<Logger>(LogLevel::INFO);
 		logger->addTarget(ILogTarget::Ptr(new ConsoleLogTarget()));
 
 		if (!parseArgs(argc, argv))
@@ -181,6 +181,8 @@ int main(int argc, char* argv[])
 		}
 
 		const auto cfg = readConfig();
+
+		logger->setLogLevel(cfg.logLevel);
 
 		if (cfg.useLogFile)
 		{
