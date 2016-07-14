@@ -24,16 +24,12 @@ public:
 	void stop();
 
 private:
-	void updateData();
-	void serverLoop();
+	std::string getTextData();
 	void acceptClient();
-
-	static void setNonBlocking(int fd);
 
 private:
 	std::shared_ptr<Logger> mLogger;
 	std::unique_ptr<IDataReader> mReader;
 	std::atomic_bool mKill;
-	std::string mTextData;
 	int mSD;
 };

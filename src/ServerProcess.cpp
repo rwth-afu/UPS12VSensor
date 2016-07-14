@@ -1,13 +1,10 @@
 #include "ServerProcess.h"
 #include "Logger.h"
 #include "IDataReader.h"
-#include <chrono>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
-#include <thread>
-#include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -65,16 +62,6 @@ void ServerProcess::run(int port)
 	const int yes = 1;
 	setsockopt(mSD, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
 
-	try
-	{
-		setNonBlocking(mSD);
-	}
-	catch (const exception& ex)
-	{
-		close(mSD);
-		throw ex;
-	}
-
 	sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
@@ -93,7 +80,14 @@ void ServerProcess::run(int port)
 		throw runtime_error("Failed to listen on server socket.");
 	}
 
-	serverLoop();
+	mLogger->log(LogLevel::INFO, "Server started.");
+
+	while (!mKill)
+	{
+		acceptClient();
+	}
+
+	mLogger->log(LogLevel::INFO, "Server stopped.");
 }
 
 void ServerProcess::stop()
@@ -101,22 +95,7 @@ void ServerProcess::stop()
 	mKill = true;
 }
 
-void ServerProcess::serverLoop()
-{
-	mLogger->log(LogLevel::INFO, "Server started.");
-
-	while (!mKill)
-	{
-		updateData();
-		acceptClient();
-
-		this_thread::sleep_for(chrono::milliseconds(1000));
-	}
-
-	mLogger->log(LogLevel::INFO, "Server stopped.");
-}
-
-void ServerProcess::updateData()
+string ServerProcess::getTextData()
 {
 	SensorData data;
 	mReader->read(data);
@@ -125,7 +104,7 @@ void ServerProcess::updateData()
 	text << fixed << setfill('0') << setprecision(2) << data.UBat <<
 		";" << data.IBat << ";" << data.UPsu << ";" << data.IPsu;
 
-	mTextData = text.str();
+	return text.str();
 }
 
 void ServerProcess::acceptClient()
@@ -136,7 +115,7 @@ void ServerProcess::acceptClient()
 	int fd = accept(mSD, &addr, &addrlen);
 	if (fd == -1)
 	{
-		if (errno != EAGAIN && errno != EWOULDBLOCK)
+		if (errno != EINTR)
 		{
 			mLogger->log(LogLevel::ERROR, "Failed to accept connection.");
 		}
@@ -146,28 +125,21 @@ void ServerProcess::acceptClient()
 
 	mLogger->log(LogLevel::DEBUG, "Client connected.");
 
-	const auto len = write(fd, mTextData.c_str(), mTextData.size());
-	if (len == -1)
+	try
 	{
-		mLogger->log(LogLevel::ERROR, "Failed to write data.");
+		const auto txt = getTextData();
+		const auto len = write(fd, txt.c_str(), txt.size());
+		if (len == -1)
+		{
+			mLogger->log(LogLevel::ERROR, "Failed to write data.");
+		}
+	}
+	catch (const exception& ex)
+	{
+		mLogger->log(LogLevel::ERROR, ex.what());
 	}
 
 	close(fd);
 
 	mLogger->log(LogLevel::DEBUG, "Client connection closed.");
-}
-
-void ServerProcess::setNonBlocking(int fd)
-{
-	auto flags = fcntl(fd, F_GETFL, 0);
-	if (flags == -1)
-	{
-		throw runtime_error("Failed to get flags.");
-	}
-
-	flags |= O_NONBLOCK;
-	if (fcntl(fd, F_SETFL, flags) == -1)
-	{
-		throw runtime_error("Failed to set flags.");
-	}
 }
