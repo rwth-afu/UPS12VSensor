@@ -1,9 +1,9 @@
 Build
 =====
 
-Execute make in main directory.
+Required libraries (Debian): libi2c-dev libconfig++-dev
 
-Packets required (Debian): libi2c-dev libconfig++-dev
+Execute make in main directory. See Makefile for options.
 
 Install program: sudo cp build/I2CSwitchBoard /usr/local/bin
 
