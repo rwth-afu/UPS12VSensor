@@ -27,7 +27,7 @@ static unique_ptr<ServerProcess> process;
 
 static void printVersion()
 {
-	cout << "I2CSwitchBoard 0.1 compiled on " << __DATE__ << " " <<
+	cout << "I2CSwitchBoard 1.0 compiled on " << __DATE__ << " " <<
 		__TIME__ << endl;
 }
 
