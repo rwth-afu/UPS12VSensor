@@ -1,5 +1,5 @@
 <?php
-$fp = fsockopen("localhost", 1337, $errno, $errstr, 30);
+$fp = fsockopen("localhost", 50033, $errno, $errstr, 30);
 if (!$fp) {
     echo "$errstr ($errno)<br />\n";
 } else {
