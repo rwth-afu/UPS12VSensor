@@ -1,0 +1,10 @@
+/var/log/I2CSwitchBoard.log {
+	weekly
+	missingok
+	delaycompress
+	rotate 4
+	compress
+	copytruncate
+	notifempty
+	create 640 pi pi
+}
