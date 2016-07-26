@@ -10,3 +10,5 @@ Install Munin Symlink to activate Plugin
 Install plugins/nagios/UPS_12V.cfg nach /etc/nagios/nrpe.d/
 
 Reload munin and nagios services
+
+Add logrotate script
