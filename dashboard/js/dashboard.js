@@ -4,14 +4,16 @@ var defaults1 = {
 	value: 0.0,
 	min: 0.0,
 	max: 15.0,
-	title: "Spannung"
+	title: "Spannung",
+	symbol: " V",
 };
 var defaults2 = {
 	decimals: 2,
 	value: 0.0,
 	min: 0.0,
 	max: 5.0,
-	title: "Strom"
+	title: "Strom",
+	symbol: " A",
 };
 
 $(function() {
